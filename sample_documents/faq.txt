@@ -1,0 +1,2 @@
+Q: How do I reset my password?
+A: Click the forgot password link on login page.
