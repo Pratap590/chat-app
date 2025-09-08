@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget</title>
+    <style>
+        /* Chat Widget Styles */
+        .chat-widget {
+            position: fixed;
+            z-index: 9999;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .chat-widget.bottom-right {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .chat-widget.bottom-left {
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .chat-widget.top-right {
+            top: 20px;
+            right: 20px;
+        }
+
+        .chat-widget.top-left {
+            top: 20px;
+            left: 20px;
+        }
+
+        .chat-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-window.open {
+            display: flex;
+        }
+
+        .chat-header {
+            padding: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .chat-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--chat-bg-color, #ffffff);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-content {
+            background: #f1f3f4;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--theme-color, #667eea);
+        }
+
+        .chat-send {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .chat-send:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: #f1f3f4;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            max-width: 80%;
+            margin-bottom: 15px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 480px) {
+            .chat-window {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 100px);
+                bottom: 80px;
+                right: 20px;
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-widget" id="chatWidget">
+        <button class="chat-toggle" id="chatToggle">
+            <i class="fas fa-comments"></i>
+        </button>
+        
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header" id="chatHeader">
+                <div class="chat-title" id="chatTitle">Chat Support</div>
+                <button class="chat-close" id="chatClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-content" id="welcomeMessage">
+                        Hello! How can I help you today?
+                    </div>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <form class="chat-input-form" id="chatForm">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." autocomplete="off">
+                    <button type="submit" class="chat-send" id="chatSend">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatWidget {
+            constructor(config) {
+                this.config = config;
+                this.isOpen = false;
+                this.sessionId = this.generateSessionId();
+                this.init();
+            }
+
+            init() {
+                this.applyCustomization();
+                this.setupEventListeners();
+                this.loadChatHistory();
+            }
+
+            applyCustomization() {
+                const widget = document.getElementById('chatWidget');
+                const toggle = document.getElementById('chatToggle');
+                const header = document.getElementById('chatHeader');
+                const send = document.getElementById('chatSend');
+                const messages = document.getElementById('chatMessages');
+                const welcome = document.getElementById('welcomeMessage');
+                const title = document.getElementById('chatTitle');
+
+                // Apply positioning
+                widget.className = `chat-widget ${this.config.customization.widget_position}`;
+
+                // Apply theme colors
+                const themeColor = this.config.customization.theme_color;
+                toggle.style.background = themeColor;
+                header.style.background = themeColor;
+                send.style.background = themeColor;
+
+                // Apply user message color
+                const style = document.createElement('style');
+                style.textContent = `
+                    :root {
+                        --theme-color: ${themeColor};
+                        --chat-bg-color: ${this.config.customization.chat_background_color};
+                    }
+                    .message.user .message-content {
+                        background: ${themeColor} !important;
+                    }
+                `;
+                document.head.appendChild(style);
+
+                // Apply background color
+                messages.style.background = this.config.customization.chat_background_color;
+
+                // Apply welcome message
+                welcome.textContent = this.config.customization.welcome_message;
+
+                // Apply tenant name
+                title.textContent = this.config.tenant_name;
+
+                // Apply custom CSS if provided
+                if (this.config.customization.custom_css) {
+                    const customStyle = document.createElement('style');
+                    customStyle.textContent = this.config.customization.custom_css;
+                    document.head.appendChild(customStyle);
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('chatToggle').addEventListener('click', () => this.toggleChat());
+                document.getElementById('chatClose').addEventListener('click', () => this.closeChat());
+                document.getElementById('chatForm').addEventListener('submit', (e) => this.sendMessage(e));
+            }
+
+            toggleChat() {
+                this.isOpen = !this.isOpen;
+                const window = document.getElementById('chatWindow');
+                const toggle = document.getElementById('chatToggle');
+                
+                if (this.isOpen) {
+                    window.classList.add('open');
+                    toggle.innerHTML = '<i class="fas fa-times"></i>';
+                } else {
+                    window.classList.remove('open');
+                    toggle.innerHTML = '<i class="fas fa-comments"></i>';
+                }
+            }
+
+            closeChat() {
+                this.isOpen = false;
+                document.getElementById('chatWindow').classList.remove('open');
+                document.getElementById('chatToggle').innerHTML = '<i class="fas fa-comments"></i>';
+            }
+
+            async sendMessage(e) {
+                e.preventDefault();
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                
+                if (!message) return;
+
+                // Add user message
+                this.addMessage(message, 'user');
+                input.value = '';
+
+                // Show typing indicator
+                this.showTyping(true);
+
+                try {
+                    const response = await fetch(this.config.api_endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            agent_type: 'doc_qa',
+                            tenant_id: this.config.tenant_id,
+                            session_id: this.sessionId
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.addMessage(data.response, 'bot');
+                    } else {
+                        this.addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+                    }
+                } catch (error) {
+                    this.addMessage('Sorry, I\'m having trouble connecting. Please try again later.', 'bot');
+                } finally {
+                    this.showTyping(false);
+                }
+            }
+
+            addMessage(content, type) {
+                const messages = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = content;
+                
+                messageDiv.appendChild(contentDiv);
+                messages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            showTyping(show) {
+                const indicator = document.getElementById('typingIndicator');
+                const messages = document.getElementById('chatMessages');
+                
+                if (show) {
+                    indicator.style.display = 'block';
+                    messages.appendChild(indicator);
+                } else {
+                    indicator.style.display = 'none';
+                }
+                
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            generateSessionId() {
+                return 'widget_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            }
+
+            loadChatHistory() {
+                // Placeholder for loading chat history from localStorage or server
+                // This could be implemented to persist conversations
+            }
+        }
+
+        // Widget will be initialized by the embedding script
+        window.ChatWidget = ChatWidget;
+    </script>
+</body>
+</html>

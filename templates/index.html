@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent Chatbot System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+
+    <!-- Debug: Add inline styles as fallback -->
+    <style>
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .agent-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .agent-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+        }
+
+        .agent-info h3 {
+            margin: 0 0 5px 0;
+            color: #2d3748;
+            font-size: 1.25rem;
+        }
+
+        .agent-info p {
+            margin: 0;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .agent-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .agent-features li {
+            padding: 5px 0;
+            color: #4a5568;
+            font-size: 0.85rem;
+        }
+
+        .agent-features li:before {
+            content: "✓ ";
+            color: #48bb78;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-robot"></i> Multi-Agent Chatbot System</h1>
+                <div class="tenant-selector">
+                    <label for="tenantSelect">Tenant:</label>
+                    <select id="tenantSelect">
+                        <option value="default">Default</option>
+                    </select>
+                    <button id="createTenantBtn" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i> New Tenant
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Agent Selection -->
+        <div class="agent-grid" id="agentGrid">
+            <!-- Default agents (will be replaced by JavaScript if it loads) -->
+            <div class="agent-card" data-agent="doc_qa" onclick="handleAgentClick('doc_qa')" style="position: relative; z-index: 1;">
+                <div class="agent-header">
+                    <div class="agent-icon">📄</div>
+                    <div class="agent-info">
+                        <h3>Document Q&A</h3>
+                        <p>Upload documents and ask questions based on their content</p>
+                    </div>
+                </div>
+                <ul class="agent-features">
+                    <li>Document Upload</li>
+                    <li>RAG Search</li>
+                    <li>Contextual Answers</li>
+                </ul>
+            </div>
+
+            <div class="agent-card" data-agent="form_gen" onclick="handleAgentClick('form_gen')" style="position: relative; z-index: 1;">
+                <div class="agent-header">
+                    <div class="agent-icon">📝</div>
+                    <div class="agent-info">
+                        <h3>Form Generator</h3>
+                        <p>Generate professional forms with PDF/DOC export</p>
+                    </div>
+                </div>
+                <ul class="agent-features">
+                    <li>PDF Export</li>
+                    <li>DOCX Export</li>
+                    <li>Professional Templates</li>
+                </ul>
+            </div>
+
+            <div class="agent-card" data-agent="api_exec" onclick="handleAgentClick('api_exec')" style="position: relative; z-index: 1;">
+                <div class="agent-header">
+                    <div class="agent-icon">🔧</div>
+                    <div class="agent-info">
+                        <h3>API Executor</h3>
+                        <p>Execute API calls and external tool operations</p>
+                    </div>
+                </div>
+                <ul class="agent-features">
+                    <li>Weather API</li>
+                    <li>Web Search</li>
+                    <li>API Discovery</li>
+                    <li>Custom Tools</li>
+                </ul>
+            </div>
+
+            <div class="agent-card" data-agent="analytics" onclick="handleAgentClick('analytics')" style="position: relative; z-index: 1;">
+                <div class="agent-header">
+                    <div class="agent-icon">📊</div>
+                    <div class="agent-info">
+                        <h3>Analytics</h3>
+                        <p>System analytics and data insights</p>
+                    </div>
+                </div>
+                <ul class="agent-features">
+                    <li>Usage Statistics</li>
+                    <li>Performance Metrics</li>
+                    <li>Reports</li>
+                </ul>
+            </div>
+
+            <div class="agent-card" data-agent="escalate" onclick="handleAgentClick('escalate')" style="position: relative; z-index: 1;">
+                <div class="agent-header">
+                    <div class="agent-icon">🆘</div>
+                    <div class="agent-info">
+                        <h3>Escalation</h3>
+                        <p>Human support and ticket management</p>
+                    </div>
+                </div>
+                <ul class="agent-features">
+                    <li>Ticket Creation</li>
+                    <li>Human Handoff</li>
+                    <li>Support Queue</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="chat-container" id="chatContainer" style="display: none;">
+            <div class="chat-header">
+                <div class="agent-info">
+                    <span class="agent-icon" id="currentAgentIcon">🤖</span>
+                    <span class="agent-name" id="currentAgentName">Agent</span>
+                </div>
+                <button class="btn btn-secondary" id="backToAgents">
+                    <i class="fas fa-arrow-left"></i> Back to Agents
+                </button>
+            </div>
+
+            <!-- Document Upload Section (for doc_qa agent) -->
+            <div class="upload-section" id="uploadSection" style="display: none;">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag & drop documents here or click to browse</p>
+                    <p class="upload-hint">Supported: PDF, DOCX, TXT, MD, CSV, JSON</p>
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md,.csv,.json">
+                </div>
+                <div class="uploaded-files" id="uploadedFiles"></div>
+
+                <!-- Document Management -->
+                <div class="document-management" id="documentManagement">
+                    <div class="document-header">
+                        <h4><i class="fas fa-folder"></i> Document Library</h4>
+                        <button class="btn btn-sm btn-secondary" id="refreshDocs">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="document-list" id="documentList">
+                        <div class="loading-docs">
+                            <i class="fas fa-spinner fa-spin"></i> Loading documents...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Generation Options (for form_gen agent) -->
+            <div class="form-options" id="formOptions" style="display: none;">
+                <div class="format-selector">
+                    <label>Output Format:</label>
+                    <div class="format-buttons">
+                        <button class="format-btn" data-format="html">
+                            <i class="fas fa-code"></i> HTML
+                        </button>
+                        <button class="format-btn active" data-format="pdf">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="format-btn" data-format="docx">
+                            <i class="fas fa-file-word"></i> DOCX
+                        </button>
+                    </div>
+                </div>
+                <div class="form-templates">
+                    <label>Quick Templates:</label>
+                    <div class="template-buttons">
+                        <button class="template-btn" data-template="contact">Contact Form</button>
+                        <button class="template-btn" data-template="survey">Customer Survey</button>
+                        <button class="template-btn" data-template="application">Job Application</button>
+                        <button class="template-btn" data-template="feedback">Feedback Form</button>
+                        <button class="template-btn" data-template="registration">Event Registration</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Executor Options (for api_exec agent) -->
+            <div class="api-options" id="apiOptions" style="display: none;">
+                <div class="tool-selector">
+                    <label>Available Tools:</label>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" data-tool="weather">
+                            <i class="fas fa-cloud-sun"></i> Weather
+                        </button>
+                        <button class="tool-btn" data-tool="search">
+                            <i class="fas fa-search"></i> Web Search
+                        </button>
+                        <button class="tool-btn" data-tool="news">
+                            <i class="fas fa-newspaper"></i> Live News
+                        </button>
+                        <button class="tool-btn" data-tool="alerts">
+                            <i class="fas fa-bell"></i> News Alerts
+                        </button>
+                        <button class="tool-btn" data-tool="api-discovery">
+                            <i class="fas fa-telescope"></i> API Discovery
+                        </button>
+                        <button class="tool-btn" data-tool="calculator">
+                            <i class="fas fa-calculator"></i> Calculator
+                        </button>
+                        <button class="tool-btn" data-tool="datetime">
+                            <i class="fas fa-clock"></i> Date/Time
+                        </button>
+                    </div>
+                    <!-- Custom API quick connector (top-right box) -->
+                    <div id="customApiBox" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px;max-width:620px;margin-left:auto;">
+                        <label style="font-weight:600;color:#2d3748;"><i class="fas fa-link"></i> Use Your API</label>
+                        <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;">
+                            <input id="customApiUrl" type="text" placeholder="https://.../get-order-status" style="height:36px;padding:6px 10px;border:1px solid #cbd5e0;border-radius:8px;">
+                            <button id="setCustomApiBtn" class="btn btn-secondary"><i class="fas fa-plug"></i> Set API</button>
+                        </div>
+                        <div style="color:#718096;font-size:12px;">After setting, I will ask for the required ID (e.g., order ID) and call your API.</div>
+                        </div>
+                </div>
+                <div class="tool-examples">
+                    <label>Example Queries:</label>
+                    <div class="example-queries">
+                        <button class="example-btn" data-query="What's the weather in New York?">Weather Query</button>
+                        <button class="example-btn" data-query="Search for latest AI news">Web Search</button>
+                        <button class="example-btn" data-query="Current terrorism news in India">Terrorism News</button>
+                        <button class="example-btn" data-query="Set up alerts for security news India">Setup Alerts</button>
+                        <button class="example-btn" data-query="Latest breaking news from BBC">Breaking News</button>
+                        <button class="example-btn" data-query="Calculate 15% tip on $85.50">Calculator</button>
+                        <button class="example-btn" data-query="What time is it in Tokyo?">Time Zone</button>
+                        <button class="example-btn" data-query="Analyze the Supabase sample APIs">API Discovery</button>
+                        <button class="example-btn" data-query="Discover this API: https://oamrapppfdexxiyoesxo.supabase.co/functions/v1/get-order-status?order_id=ORD002">Discover Sample API</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Dashboard Preview (for analytics agent) -->
+            <div class="analytics-preview" id="analyticsPreview" style="display: none;">
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="stat-label">Documents</span>
+                        <span class="stat-value" id="docCount">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-comments"></i>
+                        <span class="stat-label">Conversations</span>
+                        <span class="stat-value" id="chatCount">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-tools"></i>
+                        <span class="stat-label">Tool Calls</span>
+                        <span class="stat-value" id="toolCount">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Escalation Options (for escalate agent) -->
+            <div class="escalation-options" id="escalationOptions" style="display: none;">
+                <div class="escalation-info">
+                    <i class="fas fa-info-circle"></i>
+                    <p>This agent will create a support ticket and escalate your request to a human agent.</p>
+                </div>
+                <div class="escalation-categories">
+                    <label>Issue Category:</label>
+                    <div class="category-buttons">
+                        <button class="category-btn" data-category="technical">Technical Issue</button>
+                        <button class="category-btn" data-category="billing">Billing Question</button>
+                        <button class="category-btn" data-category="feature">Feature Request</button>
+                        <button class="category-btn" data-category="other">Other</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Section Header -->
+            <div class="chat-section-header" id="chatSectionHeader">
+                <h4><i class="fas fa-comments"></i> <span id="chatHeaderTitle">Chat Interface</span></h4>
+                <p id="chatHeaderSubtitle">Start a conversation below</p>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <p>Welcome! How can I help you today?</p>
+                </div>
+            </div>
+
+            <!-- Generated Files Section -->
+            <div class="generated-files" id="generatedFiles" style="display: none;">
+                <div class="files-header">
+                    <h4><i class="fas fa-download"></i> Generated Files</h4>
+                </div>
+                <div class="files-list" id="filesList"></div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off">
+                    <button id="sendBtn" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard (for analytics agent) -->
+        <div class="analytics-dashboard" id="analyticsDashboard" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>System Statistics</h3>
+                    <div id="systemStats"></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Tool Usage</h3>
+                    <div id="toolStats"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create Tenant Modal -->
+    <div class="modal" id="createTenantModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Tenant</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createTenantForm">
+                    <div class="form-group">
+                        <label for="tenantId">Tenant ID:</label>
+                        <input type="text" id="tenantId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tenantName">Tenant Name:</label>
+                        <input type="text" id="tenantName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Permissions:</label>
+                        <div class="checkbox-group"> 
+                            <label><input type="checkbox" value="read_documents" checked> Read Documents</label>
+                            <label><input type="checkbox" value="use_tools" checked> Use Tools</label>
+                            <label><input type="checkbox" value="generate_forms" checked> Generate Forms</label>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create Tenant</button>
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Modal -->
+    <div class="modal" id="downloadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Download Generated File</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="download-info">
+                    <i class="fas fa-file-download download-icon"></i>
+                    <p>Your file has been generated successfully!</p>
+                    <div class="download-details">
+                        <span id="downloadFileName"></span>
+                        <span id="downloadFileSize"></span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <a id="downloadLink" class="btn btn-primary" download>
+                        <i class="fas fa-download"></i> Download File
+                    </a>
+                    <button type="button" class="btn btn-secondary modal-close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="/static/script.js"></script>
+
+    <!-- Debug Script -->
+    <script>
+        // Debug: Force show agents if they don't load
+        setTimeout(() => {
+            const agentGrid = document.getElementById('agentGrid');
+            if (agentGrid && agentGrid.innerHTML.includes('Loading agents...')) {
+                console.log('Agents still loading after 3 seconds, forcing default agents...');
+
+                // Force show default agents
+                const defaultAgents = {
+                    "doc_qa": {
+                        "name": "Document Q&A",
+                        "description": "Upload documents and ask questions based on their content",
+                        "icon": "📄",
+                        "features": ["Document Upload", "RAG Search", "Contextual Answers"]
+                    },
+                    "form_gen": {
+                        "name": "Form Generator",
+                        "description": "Generate professional forms with PDF/DOC export",
+                        "icon": "📝",
+                        "features": ["PDF Export", "DOCX Export", "Professional Templates"]
+                    },
+                    "api_exec": {
+                        "name": "API Executor",
+                        "description": "Execute API calls and external tool operations",
+                        "icon": "🔧",
+                        "features": ["Weather API", "Web Search", "Custom Tools"]
+                    },
+                    "analytics": {
+                        "name": "Analytics",
+                        "description": "System analytics and data insights",
+                        "icon": "📊",
+                        "features": ["Usage Statistics", "Performance Metrics", "Reports"]
+                    },
+                    "escalate": {
+                        "name": "Escalation",
+                        "description": "Human support and ticket management",
+                        "icon": "🆘",
+                        "features": ["Ticket Creation", "Human Handoff", "Support Queue"]
+                    }
+                };
+
+                agentGrid.innerHTML = '';
+                Object.entries(defaultAgents).forEach(([key, agent]) => {
+                    const agentCard = document.createElement('div');
+                    agentCard.className = 'agent-card';
+                    agentCard.dataset.agent = key;
+
+                    agentCard.innerHTML = `
+                        <div class="agent-header">
+                            <div class="agent-icon">${agent.icon}</div>
+                            <div class="agent-info">
+                                <h3>${agent.name}</h3>
+                                <p>${agent.description}</p>
+                            </div>
+                        </div>
+                        <ul class="agent-features">
+                            ${agent.features.map(feature => `<li>${feature}</li>`).join('')}
+                        </ul>
+                    `;
+
+                    agentGrid.appendChild(agentCard);
+                });
+
+                console.log('Default agents forced to display');
+            }
+        }, 3000);
+
+        // Global function for onclick handlers
+        function handleAgentClick(agentType) {
+            console.log(`handleAgentClick called with: ${agentType}`);
+
+            // Try to use ChatbotApp if available
+            if (window.chatbotApp && window.chatbotApp.selectAgent) {
+                console.log('Using ChatbotApp.selectAgent');
+                window.chatbotApp.selectAgent(agentType);
+                return;
+            }
+
+            // Fallback implementation
+            console.log('Using fallback implementation');
+
+            const agentGrid = document.getElementById('agentGrid');
+            const chatContainer = document.getElementById('chatContainer');
+
+            if (agentGrid && chatContainer) {
+                agentGrid.style.display = 'none';
+                chatContainer.style.display = 'flex';
+
+                // Update agent info
+                const agentIcon = document.getElementById('currentAgentIcon');
+                const agentName = document.getElementById('currentAgentName');
+
+                const agentInfo = {
+                    'doc_qa': { icon: '📄', name: 'Document Q&A' },
+                    'form_gen': { icon: '📝', name: 'Form Generator' },
+                    'api_exec': { icon: '🔧', name: 'API Executor' },
+                    'analytics': { icon: '📊', name: 'Analytics' },
+                    'escalate': { icon: '🆘', name: 'Escalation' }
+                };
+
+                if (agentIcon && agentName && agentInfo[agentType]) {
+                    agentIcon.textContent = agentInfo[agentType].icon;
+                    agentName.textContent = agentInfo[agentType].name;
+                }
+
+                // Show agent-specific sections
+                showAgentSections(agentType);
+
+                console.log(`Successfully switched to ${agentType} agent interface`);
+            }
+        }
+
+        // Function to show agent-specific sections
+        function showAgentSections(agentType) {
+            // Hide all sections first
+            const sections = ['uploadSection', 'formOptions', 'apiOptions', 'analyticsPreview', 'escalationOptions'];
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) section.style.display = 'none';
+            });
+
+            // Show relevant section
+            if (agentType === 'doc_qa') {
+                const uploadSection = document.getElementById('uploadSection');
+                if (uploadSection) uploadSection.style.display = 'block';
+            } else if (agentType === 'form_gen') {
+                const formOptions = document.getElementById('formOptions');
+                if (formOptions) formOptions.style.display = 'block';
+            } else if (agentType === 'api_exec') {
+                const apiOptions = document.getElementById('apiOptions');
+                if (apiOptions) apiOptions.style.display = 'block';
+            } else if (agentType === 'analytics') {
+                const analyticsPreview = document.getElementById('analyticsPreview');
+                if (analyticsPreview) analyticsPreview.style.display = 'block';
+            } else if (agentType === 'escalate') {
+                const escalationOptions = document.getElementById('escalationOptions');
+                if (escalationOptions) escalationOptions.style.display = 'block';
+            }
+        }
+
+        // Debug: Log when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, ChatbotApp should initialize...');
+
+            // Debug: Test click handlers
+            setTimeout(() => {
+                const agentCards = document.querySelectorAll('.agent-card');
+                console.log(`Found ${agentCards.length} agent cards`);
+
+                agentCards.forEach((card, index) => {
+                    const agentType = card.dataset.agent;
+                    console.log(`Agent card ${index}: ${agentType}`);
+
+                    // Add direct click handler as backup
+                    card.addEventListener('click', (e) => {
+                        console.log(`Direct click on agent: ${agentType}`);
+
+                        // Check if ChatbotApp exists
+                        if (window.chatbotApp) {
+                            console.log('ChatbotApp found, calling selectAgent');
+                            window.chatbotApp.selectAgent(agentType);
+                        } else {
+                            console.log('ChatbotApp not found, creating simple fallback');
+
+                            // Simple fallback - show chat interface
+                            const agentGrid = document.getElementById('agentGrid');
+                            const chatContainer = document.getElementById('chatContainer');
+
+                            if (agentGrid && chatContainer) {
+                                agentGrid.style.display = 'none';
+                                chatContainer.style.display = 'flex';
+
+                                // Update agent info
+                                const agentIcon = document.getElementById('currentAgentIcon');
+                                const agentName = document.getElementById('currentAgentName');
+
+                                const agentInfo = {
+                                    'doc_qa': { icon: '📄', name: 'Document Q&A' },
+                                    'form_gen': { icon: '📝', name: 'Form Generator' },
+                                    'api_exec': { icon: '🔧', name: 'API Executor' },
+                                    'analytics': { icon: '📊', name: 'Analytics' },
+                                    'escalate': { icon: '🆘', name: 'Escalation' }
+                                };
+
+                                if (agentIcon && agentName && agentInfo[agentType]) {
+                                    agentIcon.textContent = agentInfo[agentType].icon;
+                                    agentName.textContent = agentInfo[agentType].name;
+                                }
+
+                                console.log(`Switched to ${agentType} agent interface`);
+                            }
+                        }
+                    });
+                });
+
+                // Add back button functionality
+                const backButton = document.getElementById('backToAgents');
+                if (backButton) {
+                    backButton.addEventListener('click', () => {
+                        console.log('Back button clicked');
+                        const agentGrid = document.getElementById('agentGrid');
+                        const chatContainer = document.getElementById('chatContainer');
+
+                        if (agentGrid && chatContainer) {
+                            agentGrid.style.display = 'grid';
+                            chatContainer.style.display = 'none';
+                            console.log('Returned to agent grid');
+                        }
+                    });
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Console - Real-time Chat Monitoring</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .console-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            height: 100vh;
+        }
+
+        .sidebar {
+            background: #2d3748;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #e2e8f0;
+        }
+
+        .session-list {
+            list-style: none;
+        }
+
+        .session-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        .session-item:hover {
+            background: #667eea;
+        }
+
+        .session-item.active {
+            background: #667eea;
+            box-shadow: 0 0 0 2px #764ba2;
+        }
+
+        .session-item.needs-attention {
+            border-left: 4px solid #f56565;
+        }
+
+        .session-info {
+            font-size: 14px;
+        }
+
+        .session-tenant {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .session-time {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .session-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-active { background: #48bb78; }
+        .status-escalated { background: #f56565; }
+        .status-waiting { background: #ed8936; }
+
+        .main-chat {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f7fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .avatar-user {
+            background: #667eea;
+        }
+
+        .avatar-bot {
+            background: #48bb78;
+        }
+
+        .avatar-agent {
+            background: #ed8936;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .message.agent .message-content {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .takeover-notice {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chat-send {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .chat-send:hover {
+            background: #5a67d8;
+        }
+
+        .chat-send:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .right-panel {
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            margin-bottom: 30px;
+        }
+
+        .panel-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .session-details {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .detail-value {
+            color: #2d3748;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #f7fafc;
+            border-color: #667eea;
+        }
+
+        .action-btn i {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 16px;
+            color: #667eea;
+        }
+
+        .escalation-form {
+            display: none;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .no-session {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #a0aec0;
+            text-align: center;
+        }
+
+        .no-session i {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .no-session h3 {
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        @media (max-width: 1024px) {
+            .console-container {
+                grid-template-columns: 250px 1fr;
+            }
+            
+            .right-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .console-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="console-container">
+        <!-- Left Sidebar - Session List -->
+        <div class="sidebar">
+            <h2><i class="fas fa-comments"></i> Active Sessions</h2>
+            <ul class="session-list" id="sessionList">
+                <!-- Sessions will be populated here -->
+            </ul>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main-chat">
+            <div class="chat-header">
+                <div class="chat-title" id="chatTitle">Select a session to monitor</div>
+                <div class="chat-actions" id="chatActions" style="display: none;">
+                    <button class="btn btn-primary" id="takeoverBtn" onclick="takeoverChat()">
+                        <i class="fas fa-hand-paper"></i> Take Over
+                    </button>
+                    <button class="btn btn-danger" id="endTakeoverBtn" onclick="endTakeover()" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> End Takeover
+                    </button>
+                    <button class="btn btn-secondary" onclick="escalateSession()">
+                        <i class="fas fa-exclamation-triangle"></i> Escalate
+                    </button>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="no-session">
+                    <i class="fas fa-comments"></i>
+                    <h3>No Session Selected</h3>
+                    <p>Choose a session from the sidebar to start monitoring</p>
+                </div>
+            </div>
+
+            <div class="chat-input-container" id="chatInputContainer" style="display: none;">
+                <div class="takeover-notice" id="takeoverNotice" style="display: none;">
+                    <i class="fas fa-hand-paper"></i> You have taken over this conversation
+                </div>
+                <form class="chat-input-form" id="chatForm">
+                    <textarea class="chat-input" id="chatInput" placeholder="Type your message as the agent..." rows="1"></textarea>
+                    <button type="submit" class="chat-send" id="chatSend">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Panel - Session Details -->
+        <div class="right-panel">
+            <div class="panel-section">
+                <h3 class="panel-title">Session Details</h3>
+                <div class="session-details" id="sessionDetails">
+                    <div class="detail-row">
+                        <span class="detail-label">Session ID:</span>
+                        <span class="detail-value" id="detailSessionId">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Tenant:</span>
+                        <span class="detail-value" id="detailTenant">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">User:</span>
+                        <span class="detail-value" id="detailUser">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Started:</span>
+                        <span class="detail-value" id="detailStarted">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Last Activity:</span>
+                        <span class="detail-value" id="detailLastActivity">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value" id="detailStatus">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3 class="panel-title">Quick Actions</h3>
+                <div class="quick-actions">
+                    <div class="action-btn" onclick="scheduleCallback()">
+                        <i class="fas fa-calendar"></i>
+                        Schedule Callback
+                    </div>
+                    <div class="action-btn" onclick="sendTemplate()">
+                        <i class="fas fa-file-text"></i>
+                        Send Template
+                    </div>
+                    <div class="action-btn" onclick="transferSession()">
+                        <i class="fas fa-exchange-alt"></i>
+                        Transfer
+                    </div>
+                    <div class="action-btn" onclick="endSession()">
+                        <i class="fas fa-stop"></i>
+                        End Session
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3 class="panel-title">Create Escalation</h3>
+                <div class="escalation-form" id="escalationForm">
+                    <div class="form-group">
+                        <label class="form-label">Title:</label>
+                        <input type="text" class="form-input" id="escalationTitle" placeholder="Brief description">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Priority:</label>
+                        <select class="form-input" id="escalationPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description:</label>
+                        <textarea class="form-input form-textarea" id="escalationDescription" placeholder="Detailed description of the issue"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="submitEscalation()">Create Ticket</button>
+                    <button class="btn btn-secondary" onclick="cancelEscalation()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/agent_console.js"></script>
+</body>
+</html>

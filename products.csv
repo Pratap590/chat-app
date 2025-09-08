@@ -1,0 +1,11 @@
+ProductID,ProductName,Category,Price,StockQuantity,Description
+1,Laptop Pro,Electronics,1200.00,50,High-performance laptop with 16GB RAM and 512GB SSD.
+2,Mechanical Keyboard,Peripherals,85.50,150,RGB mechanical keyboard with tactile switches.
+3,Wireless Mouse,Peripherals,25.00,300,Ergonomic wireless mouse with long battery life.
+4,4K Monitor,Electronics,450.00,30,27-inch 4K monitor with HDR support.
+5,Gaming Headset,Audio,70.00,80,Over-ear gaming headset with noise-cancelling microphone.
+6,External SSD 1TB,Storage,150.00,100,Portable 1TB SSD for fast data transfer.
+7,Webcam HD,Peripherals,40.00,200,Full HD webcam for video conferencing.
+8,Smartwatch Elite,Wearables,299.99,60,Advanced smartwatch with heart rate monitoring and GPS.
+9,Bluetooth Speaker,Audio,55.00,120,Compact Bluetooth speaker with rich bass.
+10,Gaming Chair,Furniture,199.00,40,Ergonomic gaming chair with adjustable lumbar support.

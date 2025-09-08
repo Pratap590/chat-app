@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversational API Flow Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .setup-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .chat-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+        
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2d3748;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .setup-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 0;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        .setup-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .setup-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 15px;
+        }
+        
+        .message {
+            margin: 10px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.bot {
+            background: #f1f3f4;
+            color: #2d3748;
+            border: 1px solid #e9ecef;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .send-button:hover {
+            opacity: 0.9;
+        }
+        
+        .quick-tests {
+            margin-top: 20px;
+        }
+        
+        .quick-test-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+        
+        .quick-test-button:hover {
+            background: #218838;
+        }
+        
+        .tenant-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Conversational API Flow Test</h1>
+            <p>Test intelligent API routing and multi-turn conversations</p>
+        </div>
+        
+        <div class="content">
+            <div class="setup-panel">
+                <div class="panel-title">🔧 Setup & Configuration</div>
+                
+                <label for="tenantId">Tenant ID:</label>
+                <input type="text" id="tenantId" class="tenant-input" value="test_tenant" placeholder="Enter tenant ID">
+                
+                <button class="setup-button" onclick="setupAPIs()">Setup Sample APIs</button>
+                
+                <div id="setupStatus"></div>
+                
+                <div class="quick-tests">
+                    <div class="panel-title">🚀 Quick Test Scenarios</div>
+                    <button class="quick-test-button" onclick="testAccountOpening()">Test Account Opening</button>
+                    <button class="quick-test-button" onclick="testOrderStatus()">Test Order Status</button>
+                    <button class="quick-test-button" onclick="testPayment()">Test Payment</button>
+                    <button class="quick-test-button" onclick="clearChat()">Clear Chat</button>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9rem;">
+                    <strong>💡 How to Test:</strong><br>
+                    1. Setup sample APIs first<br>
+                    2. Try: "I want to open an account"<br>
+                    3. Follow the bot's prompts<br>
+                    4. Watch the intelligent conversation flow!
+                </div>
+            </div>
+            
+            <div class="chat-panel">
+                <div class="panel-title">💬 Chat Interface</div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        Hello! I'm your intelligent assistant. I can help you with account opening, order status, payments, and more. 
+                        Try saying "I want to open an account" to see the conversational flow in action!
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                    <button class="send-button" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function setupAPIs() {
+            const tenantId = document.getElementById('tenantId').value;
+            const statusDiv = document.getElementById('setupStatus');
+            const button = event.target;
+            
+            button.disabled = true;
+            button.textContent = 'Setting up...';
+            
+            try {
+                const response = await fetch(`/api/setup-sample-apis/${tenantId}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `<div class="status success">✅ APIs setup successfully: ${result.apis_registered.join(', ')}</div>`;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ Setup failed: ${result.detail || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+            
+            button.disabled = false;
+            button.textContent = 'Setup Sample APIs';
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const tenantId = document.getElementById('tenantId').value;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        tenant_id: tenantId,
+                        agent_type: 'api_exec'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addMessage(result.response, 'bot');
+                } else {
+                    addMessage(`Error: ${result.detail || 'Unknown error'}`, 'bot');
+                }
+            } catch (error) {
+                addMessage(`Error: ${error.message}`, 'bot');
+            }
+        }
+        
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function testAccountOpening() {
+            document.getElementById('chatInput').value = "I want to open an account";
+            sendMessage();
+        }
+        
+        function testOrderStatus() {
+            document.getElementById('chatInput').value = "I want to check my order status";
+            sendMessage();
+        }
+        
+        function testPayment() {
+            document.getElementById('chatInput').value = "I need to process a payment";
+            sendMessage();
+        }
+        
+        function clearChat() {
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML = `
+                <div class="message bot">
+                    Chat cleared! I'm ready to help you test the conversational API flows.
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

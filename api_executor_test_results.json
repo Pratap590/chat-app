@@ -1,0 +1,103 @@
+{
+  "success": true,
+  "overall_success_rate": 100.0,
+  "successful_suites": 4,
+  "total_suites": 4,
+  "details": "API Executor Comprehensive Test: 4/4 suites passed",
+  "results": {
+    "Basic API Executor": {
+      "success": true,
+      "details": "Basic API Executor: 3/3 successful",
+      "results": {
+        "Weather Query": {
+          "success": true,
+          "response_length": 142,
+          "status_code": 200,
+          "response_preview": "To provide you with the current weather, I need to know the specific city you're interested in. Coul..."
+        },
+        "Time Query": {
+          "success": true,
+          "response_length": 164,
+          "status_code": 200,
+          "response_preview": "The current time is **14:36:12 UTC** on **Thursday, September 4, 2025**. If you need the time in a s..."
+        },
+        "Cat Fact Query": {
+          "success": true,
+          "response_length": 196,
+          "status_code": 200,
+          "response_preview": "Did you know that cats have a unique way of communicating with humans? They often use a specific set..."
+        }
+      },
+      "success_rate": 100.0
+    },
+    "Custom API Execution": {
+      "success": true,
+      "details": "Custom API Execution: 4/4 successful",
+      "results": {
+        "GET JSONPlaceholder Posts": {
+          "success": true,
+          "status_code": 200,
+          "api_status": 200,
+          "has_data": true,
+          "response_preview": "{'userId': 1, 'id': 1, 'title': 'sunt aut facere repellat provident occaecati excepturi optio reprehenderit', 'body': 'quia et suscipit\\nsuscipit recu..."
+        },
+        "POST JSONPlaceholder": {
+          "success": true,
+          "status_code": 200,
+          "api_status": 201,
+          "has_data": true,
+          "response_preview": "{'title': 'Test Post', 'body': 'This is a test post', 'userId': 1, 'id': 101}..."
+        },
+        "PUT JSONPlaceholder": {
+          "success": true,
+          "status_code": 200,
+          "api_status": 200,
+          "has_data": true,
+          "response_preview": "{'id': 1, 'title': 'Updated Post', 'body': 'This is an updated test post', 'userId': 1}..."
+        },
+        "Cat Facts API": {
+          "success": true,
+          "status_code": 200,
+          "api_status": 200,
+          "has_data": true,
+          "response_preview": "{'fact': 'The smallest pedigreed cat is a Singapura, which can weigh just 4 lbs (1.8 kg), or about five large cans of cat food. The largest pedigreed ..."
+        }
+      },
+      "success_rate": 100.0
+    },
+    "Dynamic API Management": {
+      "success": true,
+      "details": "Dynamic API Management: 3/3 successful",
+      "results": {
+        "registration": {
+          "success": true,
+          "status_code": 200,
+          "response": "Success"
+        },
+        "listing": {
+          "success": true,
+          "status_code": 200,
+          "found_registered_api": true
+        },
+        "removal": {
+          "success": true,
+          "status_code": 200
+        }
+      },
+      "success_rate": 100.0
+    },
+    "Conversation Flow": {
+      "success": true,
+      "details": "Conversation Flow API: 1/1 successful",
+      "results": {
+        "Multi-step API conversation": {
+          "success": true,
+          "responses_count": 3,
+          "expected_count": 3,
+          "all_responses_valid": true
+        }
+      },
+      "success_rate": 100.0
+    }
+  }
+}

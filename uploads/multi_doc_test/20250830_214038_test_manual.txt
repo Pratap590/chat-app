@@ -1,0 +1,23 @@
+
+Product Manual: Smart Home System
+
+Introduction:
+Welcome to your new Smart Home System. This comprehensive guide will help you set up and use all features.
+
+Features:
+- Voice control with Alexa and Google Assistant
+- Mobile app control from anywhere
+- Energy monitoring and optimization
+- Security camera integration
+- Smart lighting with scheduling
+- Temperature control and automation
+
+Installation:
+1. Download the SmartHome app from App Store or Google Play
+2. Create an account and verify your email
+3. Connect the hub to your WiFi network
+4. Follow the in-app setup wizard
+5. Add devices one by one using the scan feature
+
+Troubleshooting:
+If you experience connectivity issues, try restarting the hub and checking your WiFi signal strength.

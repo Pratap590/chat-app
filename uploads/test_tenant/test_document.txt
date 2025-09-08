@@ -1,0 +1,1 @@
+This is a test document for RAG testing. It contains information about AI and machine learning.

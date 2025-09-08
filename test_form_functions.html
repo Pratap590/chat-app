@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Form - Clear Function and Company Name</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        .form-title {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .company-name {
+            color: #2c5aa0;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border: 2px dashed transparent;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .company-name:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .company-name:focus {
+            outline: none;
+            border-color: #007bff;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+        .field-group {
+            margin-bottom: 20px;
+        }
+        .field-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .form-actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .progress-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
+        }
+        .progress-text {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #28a745);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h1 class="form-title">Test Form</h1>
+            <div class="company-name editable-company" data-company="Test Corporation" contenteditable="true" title="Click to edit company name">Test Corporation</div>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                <strong>Instructions:</strong> You can edit the company name above by clicking on it. 
+                Test the form functions using the buttons below.
+            </p>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-text">Form Completion Progress: <span id="progress-percent">0%</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <form id="dynamicForm" method="post" action="#" onsubmit="return handleSubmit(event)">
+            <div class="field-group">
+                <label class="field-label" for="test_name">Test Name *</label>
+                <input type="text" id="test_name" name="test_name" required>
+            </div>
+            
+            <div class="field-group">
+                <label class="field-label" for="test_email">Test Email *</label>
+                <input type="email" id="test_email" name="test_email" required>
+            </div>
+            
+            <div class="field-group">
+                <label class="field-label" for="test_message">Test Message</label>
+                <textarea id="test_message" name="test_message" rows="4"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Submit Form</button>
+                <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear All Data</button>
+                <button type="button" class="btn" style="background: #17a2b8; color: white;" onclick="saveProgress()">Save Progress</button>
+                <button type="button" class="btn btn-success" onclick="downloadAsPDF()">Download PDF</button>
+                <button type="button" class="btn btn-success" onclick="downloadAsDOCX()">Download DOCX</button>
+            </div>
+        </form>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h4>Test Information:</h4>
+            <ul>
+                <li><strong>Company Name:</strong> <span id="current-company">Test Corporation</span></li>
+                <li><strong>Form Functions:</strong> clearForm(), saveProgress(), downloadAsPDF(), downloadAsDOCX()</li>
+                <li><strong>Auto-save:</strong> Enabled (saves every 2 seconds after changes)</li>
+                <li><strong>Progress Tracking:</strong> Updates automatically as you fill fields</li>
+            </ul>
+            
+            <button onclick="testCompanyNameDetection()" class="btn btn-primary" style="margin-top: 10px;">
+                Test Company Name Detection
+            </button>
+        </div>
+    </div>
+
+    <!-- Load the enhanced form functionality -->
+    <script src="/static/form_download.js"></script>
+    
+    <script>
+        // Basic form submission handler
+        function handleSubmit(event) {
+            event.preventDefault();
+            alert('Form submitted successfully! (This is just a test)');
+            return false;
+        }
+        
+        // Test function for company name detection
+        function testCompanyNameDetection() {
+            // This function will be available from form_download.js
+            if (typeof getCurrentCompanyName === 'function') {
+                const detectedCompany = getCurrentCompanyName();
+                document.getElementById('current-company').textContent = detectedCompany;
+                alert(`Detected company name: "${detectedCompany}"`);
+            } else {
+                alert('getCurrentCompanyName function not loaded yet. Please wait a moment and try again.');
+            }
+        }
+        
+        // Update company name display when edited
+        document.addEventListener('DOMContentLoaded', function() {
+            const companyElement = document.querySelector('.company-name');
+            if (companyElement) {
+                companyElement.addEventListener('input', function() {
+                    const newCompanyName = this.textContent.trim();
+                    document.getElementById('current-company').textContent = newCompanyName;
+                    
+                    // Update data attribute
+                    this.setAttribute('data-company', newCompanyName);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
